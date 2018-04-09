@@ -6,18 +6,18 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="HandheldFriendly" content="True">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <meta name="description" content="I came across a very strange behaviour with Javascript arrays and Observables when working on an Angular app. I was trying to create an onClick() method that sends an HTTP requests and response its va">
+    <meta name="description" content="IntroductionI came across a very strange behaviour with Javascript arrays and Observables when working on an Angular app. I was trying to create an onClick() method that sends an HTTP requests and res">
 <meta name="keywords" content="Javascript,Observables,RxJs,Angular">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Pushing objects from an observable overwrites previous data in array">
 <meta property="og:url" content="https://cyphercodes.github.io/2018/04/09/Pushing-objects-from-an-observable-overwrites-previous-data-in-array/index.html">
 <meta property="og:site_name" content="Cyphercodes">
-<meta property="og:description" content="I came across a very strange behaviour with Javascript arrays and Observables when working on an Angular app. I was trying to create an onClick() method that sends an HTTP requests and response its va">
+<meta property="og:description" content="IntroductionI came across a very strange behaviour with Javascript arrays and Observables when working on an Angular app. I was trying to create an onClick() method that sends an HTTP requests and res">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2018-04-09T11:35:44.101Z">
+<meta property="og:updated_time" content="2018-04-09T11:56:30.140Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Pushing objects from an observable overwrites previous data in array">
-<meta name="twitter:description" content="I came across a very strange behaviour with Javascript arrays and Observables when working on an Angular app. I was trying to create an onClick() method that sends an HTTP requests and response its va">
+<meta name="twitter:description" content="IntroductionI came across a very strange behaviour with Javascript arrays and Observables when working on an Angular app. I was trying to create an onClick() method that sends an HTTP requests and res">
     
     
         
@@ -91,7 +91,7 @@
 
     </div>
     <div id="toc">
-      
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Introduction"><span class="toc-number">1.</span> <span class="toc-text">Introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Issue-Replication"><span class="toc-number">2.</span> <span class="toc-text">Issue Replication</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Fix"><span class="toc-number">3.</span> <span class="toc-text">Fix</span></a></li></ol>
     </div>
   </span>
 </div>
@@ -130,26 +130,26 @@
   
 
   <div class="content" itemprop="articleBody">
-    <p>I came across a very strange behaviour with Javascript arrays and Observables when working on an Angular app.</p>
+    <h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>I came across a very strange behaviour with Javascript arrays and Observables when working on an Angular app.</p>
 <p>I was trying to create an onClick() method that sends an HTTP requests and response its value is pushed to an array.</p>
 <p>The code was somehow like:<br><figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">@Component</span>()</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">class</span> AppComponent &#123;</span><br><span class="line">   subj: Subject = <span class="keyword">new</span> Subject();</span><br><span class="line">   items: <span class="built_in">Array</span>&lt;Item&gt; = [];</span><br><span class="line">   </span><br><span class="line">   onClick(id)&#123;</span><br><span class="line">       <span class="keyword">this</span>.http.get(<span class="string">'<a href="https://cyphercodes.github.io/getItems?id='" target="_blank" rel="noopener noreferrer">https://cyphercodes.github.io/getItems?id='</a></span>+id).subscribe(<span class="function"><span class="params">res</span> =&gt;</span> &#123;</span><br><span class="line">           <span class="keyword">this</span>.items.push(res); <span class="comment">// assuming that res is a Item object</span></span><br><span class="line">       &#125;);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>Strangely, every type an object is pushed into the array <code>items</code>, it is overwriting all the previous values of the array and then pushing a new object!</p>
 <p>After some research, I came across this Stack Overflow where James explains the cause perfectly:</p>
 <p><a href="https://stackoverflow.com/questions/19054997/push-is-overwriting-previous-data-in-array" target="_blank" rel="noopener">https://stackoverflow.com/questions/19054997/push-is-overwriting-previous-data-in-array</a></p>
 <p>Objects are passed by reference and in the above example it seems that Angular’s HTTP request sends the same object with each request without creating a new object resulting in the same object being pushed into the array every time but with different values. This causes <code>Array.push()</code> to overwrite the members of the array.</p>
-<p>In the JSFiddle below, an attempt was made to replicate the issue:</p>
-<script async src="//jsfiddle.net/cyphercodes/sqghkon6/2/embed/js,result/dark/"></script>
+<h2 id="Issue-Replication"><a href="#Issue-Replication" class="headerlink" title="Issue Replication"></a>Issue Replication</h2><p>In the JSFiddle below, an attempt was made to replicate the issue:</p>
+<script async src="//jsfiddle.net/cyphercodes/sqghkon6/embed/js,result/dark/"></script>
 
 <p>We are mimicking a service that sends the same object with different values every 1 second to a Subject Observable that we created.</p>
 <p>Then, we subscribe to that service and push every result object to an array.</p>
 <p>If you click on the <code>Result</code> tab of this fiddle, you should notice that all the array elements are being overwritten with every push.</p>
-<p>One way of fixing this is to push a copy of the object to the array in the subscribe function instead of pushing the object itself.</p>
+<h2 id="Fix"><a href="#Fix" class="headerlink" title="Fix"></a>Fix</h2><p>One way of fixing this is to push a copy of the object to the array in the subscribe function instead of pushing the object itself.</p>
 <p>This can be done by using <code>Object.assign()</code> as shown below:</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [];</span><br><span class="line">subj.subscribe(<span class="function"><span class="params">v</span> =&gt;</span> &#123;</span><br><span class="line">  arr.push(<span class="built_in">Object</span>.assign(&#123;&#125;,v));</span><br><span class="line">  <span class="built_in">console</span>.log(arr);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
 <p>You can find the fix applied on the JSFiddle below:</p>
-<script async src="//jsfiddle.net/cyphercodes/kpvLxn50/2/embed/js,result/dark/"></script>
+<script async src="//jsfiddle.net/cyphercodes/kpvLxn50/embed/js,result/dark/"></script>
 
-<p>If you check the result you should realize that the array objects are no longer overwritten with every push.</p>
+<p>If you check the <code>Result</code> tab you should realize that the array objects are no longer overwritten with every push.</p>
 
   </div>
 </article>
@@ -176,7 +176,7 @@
     </div>
 
     <div id="toc-footer" style="display: none">
-      
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Introduction"><span class="toc-number">1.</span> <span class="toc-text">Introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Issue-Replication"><span class="toc-number">2.</span> <span class="toc-text">Issue Replication</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Fix"><span class="toc-number">3.</span> <span class="toc-text">Fix</span></a></li></ol>
     </div>
 
     <div id="share-footer" style="display: none">
